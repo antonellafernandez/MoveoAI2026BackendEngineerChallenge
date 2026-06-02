@@ -8,7 +8,7 @@ Build a RESTful API for a simple task management system. The API should allow us
 
 ⚠️ All the information you need to successfully complete the challenge is provided here. If you encounter any doubts or questions, we encourage you to make assumptions, use your best judgment, and proceed.
 
-☎️ After you've completed the challenge, please email your Github repository to `german@moveo.ai` Use the subject line "Backend Engineer Challenge — **Moveo.AI**"
+☎️ After you've completed the challenge, please email your Github repository to `[mail]` Use the subject line "Backend Engineer Challenge — **Moveo.AI**"
 
 ### Requirements:
 
