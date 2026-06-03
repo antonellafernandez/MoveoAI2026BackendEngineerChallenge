@@ -17,10 +17,8 @@ var validStatuses = map[string]bool{
 	"completed":   true,
 }
 
-func NewTaskService(repo *repository.TaskRepository) *TaskService {
-	return &TaskService{
-		repo: repo,
-	}
+func NewTaskService(repo *repository.TaskRepository) TaskServiceInterface {
+	return &TaskService{repo: repo}
 }
 
 func (s *TaskService) validateStatus(status string) bool {

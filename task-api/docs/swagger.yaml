@@ -1,0 +1,304 @@
+basePath: /
+definitions:
+  dto.CreateTaskResponse:
+    properties:
+      message:
+        example: task created successfully
+        type: string
+      task:
+        $ref: '#/definitions/dto.TaskResponse'
+    type: object
+  dto.LoginBadRequestResponse:
+    properties:
+      message:
+        example: invalid request
+        type: string
+    type: object
+  dto.LoginCouldNotGenerateTokenResponse:
+    properties:
+      message:
+        example: could not generate token
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        example: admin
+        type: string
+      username:
+        example: admin
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  dto.LoginResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6Ik...
+        type: string
+    type: object
+  dto.LoginUnauthorizedResponse:
+    properties:
+      message:
+        example: invalid credentials
+        type: string
+    type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        example: response message detail
+        type: string
+    type: object
+  dto.TaskResponse:
+    properties:
+      description:
+        example: Install dependencies and set up Nginx reverse proxy on the server
+        type: string
+      due_date:
+        example: "2026-06-15T14:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      status:
+        example: pending
+        type: string
+      title:
+        example: Configure production server
+        type: string
+    type: object
+  models.Task:
+    properties:
+      description:
+        example: Install dependencies and set up Nginx reverse proxy on the server
+        type: string
+      due_date:
+        example: "2026-06-15T14:30:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      status:
+        example: pending
+        type: string
+      title:
+        example: Configure production server
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: RESTful API for a simple task management system secured with JWT authentication.
+    The API allows users to create, read, update, and delete tasks. Each task includes
+    a title, optional description, status, and optional due date.
+  title: Task API
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates user with username and password. Returns JWT token
+        if credentials are valid.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.LoginBadRequestResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.LoginUnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.LoginCouldNotGenerateTokenResponse'
+      summary: Login user
+      tags:
+      - auth
+  /tasks:
+    get:
+      description: Returns paginated list of tasks with optional filters.
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - default: pending
+        description: Filter by status
+        enum:
+        - pending
+        - in-progress
+        - completed
+        in: query
+        name: status
+        type: string
+      - description: Filter by due date
+        example: "2026-06-15T14:30:00Z"
+        in: query
+        name: due_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.TaskResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all tasks
+      tags:
+      - tasks
+    post:
+      consumes:
+      - application/json
+      description: Creates a task with title, optional description, status, and optional
+        due date.
+      parameters:
+      - description: Task payload
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateTaskResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new task
+      tags:
+      - tasks
+  /tasks/{id}:
+    delete:
+      description: Deletes a task by ID.
+      parameters:
+      - description: Task ID
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Task deleted successfully, no content returned
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a task
+      tags:
+      - tasks
+    get:
+      description: Returns a single task by its ID.
+      parameters:
+      - description: Task ID
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TaskResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Get task by ID
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Updates task fields by ID.
+      parameters:
+      - description: Task ID
+        example: 1
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated task data
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/models.Task'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+      security:
+      - BearerAuth: []
+      summary: Update an existing task
+      tags:
+      - tasks
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
