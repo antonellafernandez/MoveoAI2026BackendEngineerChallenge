@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 
@@ -13,6 +14,7 @@ type Config struct {
 	JWT      JWTConfig
 	Server   ServerConfig
 	Auth     AuthConfig
+	Frontend FrontendConfig
 }
 
 type DatabaseConfig struct {
@@ -37,13 +39,17 @@ type AuthConfig struct {
 	AdminPassword string
 }
 
+type FrontendConfig struct {
+	URL string
+}
+
 func Load() *Config {
 	_ = godotenv.Load()
 
 	dbPort := getEnvInt("DB_PORT", 5432)
 	serverPort := getEnvInt("SERVER_PORT", 8080)
 
-	return &Config{
+	cfg := &Config{
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     dbPort,
@@ -53,15 +59,36 @@ func Load() *Config {
 			SSLMode:  getEnv("DB_SSLMODE", "disable"),
 		},
 		JWT: JWTConfig{
-			Secret: getEnv("JWT_SECRET", "my-secret-key"),
+			Secret: os.Getenv("JWT_SECRET"),
 		},
 		Server: ServerConfig{
 			Port: serverPort,
 		},
 		Auth: AuthConfig{
-			AdminUsername: getEnv("ADMIN_USERNAME", "admin"),
-			AdminPassword: getEnv("ADMIN_PASSWORD", "admin"),
+			AdminUsername: os.Getenv("ADMIN_USERNAME"),
+			AdminPassword: os.Getenv("ADMIN_PASSWORD"),
 		},
+		Frontend: FrontendConfig{
+			URL: getEnv("FRONTEND_URL", "http://localhost:5173"),
+		},
+	}
+
+	validateConfig(cfg)
+
+	return cfg
+}
+
+func validateConfig(cfg *Config) {
+	if cfg.JWT.Secret == "" {
+		log.Fatal("JWT_SECRET is required")
+	}
+
+	if cfg.Auth.AdminUsername == "" {
+		log.Fatal("ADMIN_USERNAME is required")
+	}
+
+	if cfg.Auth.AdminPassword == "" {
+		log.Fatal("ADMIN_PASSWORD is required")
 	}
 }
 
@@ -90,9 +117,11 @@ func getEnvInt(key string, defaultValue int) int {
 	if value == "" {
 		return defaultValue
 	}
+
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
 		return defaultValue
 	}
+
 	return intValue
 }
