@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"task-api/internal/auth"
+	"task-api/internal/config"
 	"task-api/internal/dto"
 )
 
@@ -21,7 +22,7 @@ import (
 // @Failure 401 {object} dto.LoginUnauthorizedResponse
 // @Failure 500 {object} dto.LoginCouldNotGenerateTokenResponse
 // @Router /login [post]
-func Login(c *gin.Context) {
+func Login(c *gin.Context, cfg *config.Config) {
 	var req dto.LoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -38,14 +39,14 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if req.Username != "admin" || req.Password != "admin" {
+	if req.Username != cfg.Auth.AdminUsername || req.Password != cfg.Auth.AdminPassword {
 		c.JSON(http.StatusUnauthorized, dto.LoginUnauthorizedResponse{
 			Message: "invalid credentials",
 		})
 		return
 	}
 
-	token, err := auth.GenerateToken()
+	token, err := auth.GenerateToken(cfg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, dto.LoginCouldNotGenerateTokenResponse{
 			Message: "could not generate token",

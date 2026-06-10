@@ -9,21 +9,34 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"task-api/internal/config"
 	"task-api/internal/dto"
 )
 
-func setupAuthRouter() *gin.Engine {
+func setupAuthRouter(cfg *config.Config) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 
 	r := gin.New()
-	r.POST("/login", Login)
+	r.POST("/login", func(c *gin.Context) {
+		Login(c, cfg)
+	})
 
 	return r
 }
 
 // TestLogin_Success tests the successful login scenario
 func TestLogin_Success(t *testing.T) {
-	r := setupAuthRouter()
+	cfg := &config.Config{
+		Auth: config.AuthConfig{
+			AdminUsername: "admin",
+			AdminPassword: "admin",
+		},
+		JWT: config.JWTConfig{
+			Secret: "test-secret",
+		},
+	}
+
+	r := setupAuthRouter(cfg)
 
 	body := dto.LoginRequest{
 		Username: "admin",
@@ -56,7 +69,17 @@ func TestLogin_Success(t *testing.T) {
 
 // TestLogin_InvalidCredentials tests the login scenario with invalid credentials
 func TestLogin_InvalidCredentials(t *testing.T) {
-	r := setupAuthRouter()
+	cfg := &config.Config{
+		Auth: config.AuthConfig{
+			AdminUsername: "admin",
+			AdminPassword: "admin",
+		},
+		JWT: config.JWTConfig{
+			Secret: "test-secret",
+		},
+	}
+
+	r := setupAuthRouter(cfg)
 
 	body := dto.LoginRequest{
 		Username: "wrong",
@@ -86,7 +109,17 @@ func TestLogin_InvalidCredentials(t *testing.T) {
 
 // TestLogin_BadRequest tests the login scenario with an invalid request body
 func TestLogin_BadRequest(t *testing.T) {
-	r := setupAuthRouter()
+	cfg := &config.Config{
+		Auth: config.AuthConfig{
+			AdminUsername: "admin",
+			AdminPassword: "admin",
+		},
+		JWT: config.JWTConfig{
+			Secret: "test-secret",
+		},
+	}
+
+	r := setupAuthRouter(cfg)
 
 	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer([]byte(`{}`)))
 	req.Header.Set("Content-Type", "application/json")

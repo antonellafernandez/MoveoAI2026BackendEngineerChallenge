@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
 
 	_ "task-api/docs"
 
+	"task-api/internal/config"
 	"task-api/internal/database"
 	"task-api/internal/handlers"
 	"task-api/internal/middleware"
@@ -29,7 +31,9 @@ import (
 
 func main() {
 
-	db, err := database.Connect()
+	cfg := config.Load()
+
+	db, err := database.Connect(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,11 +48,13 @@ func main() {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Public route
-	router.POST("/login", handlers.Login)
+	router.POST("/login", func(c *gin.Context) {
+		handlers.Login(c, cfg)
+	})
 
 	// Protected routes
 	protected := router.Group("/")
-	protected.Use(middleware.AuthMiddleware())
+	protected.Use(middleware.AuthMiddleware(cfg))
 
 	protected.POST("/tasks", taskHandler.CreateTask)
 	protected.GET("/tasks", taskHandler.GetTasks)
@@ -56,7 +62,8 @@ func main() {
 	protected.PUT("/tasks/:id", taskHandler.UpdateTask)
 	protected.DELETE("/tasks/:id", taskHandler.DeleteTask)
 
-	if err := router.Run(":8080"); err != nil {
+	port := fmt.Sprintf(":%d", cfg.Server.Port)
+	if err := router.Run(port); err != nil {
 		log.Fatal(err)
 	}
 }

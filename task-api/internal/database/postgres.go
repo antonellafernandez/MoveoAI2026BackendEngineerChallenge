@@ -6,12 +6,13 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"task-api/internal/config"
 	"task-api/internal/models"
 )
 
-func Connect() (*gorm.DB, error) {
+func Connect(cfg *config.Config) (*gorm.DB, error) {
 
-	dsn := "host=db user=postgres password=postgres dbname=tasks port=5432 sslmode=disable"
+	dsn := cfg.Database.GetDSN()
 
 	var db *gorm.DB
 	var err error

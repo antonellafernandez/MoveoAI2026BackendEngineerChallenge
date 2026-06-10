@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 
-	"task-api/internal/auth"
+	"task-api/internal/config"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
@@ -40,7 +40,7 @@ func AuthMiddleware() gin.HandlerFunc {
 				return nil, jwt.ErrTokenSignatureInvalid
 			}
 
-			return auth.JwtSecret, nil
+			return []byte(cfg.JWT.Secret), nil
 		})
 
 		if err != nil {
